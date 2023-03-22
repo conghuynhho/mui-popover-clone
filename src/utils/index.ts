@@ -20,3 +20,22 @@ export function ggjDebounce(fn: any, wait?: number) {
     }, wait || 400)
   }
 }
+
+export default function debounce(func:any, wait = 166) {
+  let timeout: any
+  function debounced(...args: any) {
+    const later = () => {
+      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      func.apply(this, args)
+    };
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+
+  debounced.clear = () => {
+    clearTimeout(timeout)
+  };
+
+  return debounced
+}

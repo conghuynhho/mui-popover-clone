@@ -1,6 +1,8 @@
 import { useTheme } from '../providers/GgjThemeProvider/ThemeContext'
-import React, { createRef, useEffect, useState } from 'react'
+import React, {createRef, SyntheticEvent, useEffect, useState} from 'react'
 import { css } from '@emotion/react'
+import MyFakePopover from "./MyFakePopover";
+import useLockedBody from "../utils/useLockBody";
 
 interface SettingOptionSelectProps {
   options: Array<OptionSelectItemProps>
@@ -9,14 +11,37 @@ interface SettingOptionSelectProps {
 
 const MAX_HEIGHT = 200
 
+
+
+
+
+
+
+
+
+
+
 function SettingOptionSelect({options, selectedDeviceLabel}: SettingOptionSelectProps) {
   const theme = useTheme()
   const [isOpen, setIsOpen] = useState(false)
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   // const [selectedOption, setSelectedOption] = useState(value)
   const [isUp, setIsUp] = useState(false)
+  const [isLocked, setIsLocked] = useLockedBody(false, 'root')
   const dropdownRef = createRef<HTMLDivElement>()
 
-  const toggling = () => setIsOpen(!isOpen)
+  const toggling = (event: SyntheticEvent<HTMLDivElement>) => {
+    setIsLocked(!isOpen)
+    console.log('==========toggle===========')
+    event.stopPropagation()
+    setAnchorEl(event.currentTarget)
+    setIsOpen(!isOpen)
+  }
+  const onClose = () => {
+    console.log('==========onClose===========')
+    setIsLocked(false)
+    setIsOpen(false)
+  }
 
   useEffect(() => {
     setTimeout(() => {
@@ -56,32 +81,33 @@ function SettingOptionSelect({options, selectedDeviceLabel}: SettingOptionSelect
 
 
   return (
-    <div ref={dropdownRef} css={css` position: relative`}>
+    <div
+      ref={dropdownRef}
+      css={css` position: relative; max-width: 300px;`}
+    >
       <div
         css={css`
-        border-radius: 10px;
-        color: ${theme.colors.jade.light};
-        font-size: 14px;
-        line-height: 16px;
-        height: 48px;
-        max-width: 300px;
-        letter-spacing: -0.005625rem;
-        width: 100%;
-        padding: 14px 16px;
-        transition: box-shadow 0.05s ease-in;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        appearance: none;
-        border: 1px solid ${theme.colors.smoke.light};
-        background-color: ${theme.inputs.bgd};
-        cursor: pointer;
-        &:focus{
-          border: ${theme.inputs.focus.border};
-          box-shadow: ${theme.inputs.focus.shadow};
-          outline: none;
-        }
-      `}
+          border-radius: 10px;
+          color: ${theme.colors.jade.light};
+          font-size: 14px;
+          line-height: 16px;
+          height: 48px;
+          letter-spacing: -0.005625rem;
+          padding: 14px 16px;
+          transition: box-shadow 0.05s ease-in;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          appearance: none;
+          border: 1px solid ${theme.colors.smoke.light};
+          background-color: ${theme.inputs.bgd};
+          cursor: pointer;
+          &:focus{
+            border: ${theme.inputs.focus.border};
+            box-shadow: ${theme.inputs.focus.shadow};
+            outline: none;
+          }
+        `}
         onClick={toggling}
       >
       <span css={css`
@@ -92,33 +118,40 @@ function SettingOptionSelect({options, selectedDeviceLabel}: SettingOptionSelect
 
 
       </div>
-      {isOpen && (
-        <div css={css`
-        position: absolute;
-        ${isUp ? 'bottom: 100%;' : ''}
-        z-index: 100;
-        width: 100%;
-        animation: fadeIn 0.4s;
-        @keyframes fadeIn {
-          from {opacity: 0}
-          to {opacity: 1}
-        }
-      `}>
-          <ul css={css`
-          background-color: ${theme.colors.greys.white};
-          margin: ${theme.spacing[1]}px 0;
-          padding: 0;
-          border-radius: 4px;
-          box-shadow: ${theme.shadows.medium};
-          max-height: ${MAX_HEIGHT}px;
-          overflow-y: auto;
-        `}>
-            {options.map((option, index) => (
-              <OptionSelectItem key={index} onClose={() => setIsOpen(false)} {...option} />
-            ))}
-          </ul>
-        </div>
-      )}
+      {/*{isOpen && (*/}
+      {/*  <div css={css`*/}
+      {/*    position: absolute;*/}
+      {/*    ${isUp ? 'bottom: 100%;' : ''}*/}
+      {/*    z-index: 100;*/}
+      {/*    width: 100%;*/}
+      {/*    animation: fadeIn 0.4s;*/}
+      {/*    @keyframes fadeIn {*/}
+      {/*      from {opacity: 0}*/}
+      {/*      to {opacity: 1}*/}
+      {/*    }*/}
+      {/*  `}>*/}
+      {/*    <ul css={css`*/}
+      {/*      background-color: ${theme.colors.greys.white};*/}
+      {/*      margin: ${theme.spacing[1]}px 0;*/}
+      {/*      padding: 0;*/}
+      {/*      border-radius: 4px;*/}
+      {/*      box-shadow: ${theme.shadows.medium};*/}
+      {/*      max-height: ${MAX_HEIGHT}px;*/}
+      {/*      overflow-y: auto;*/}
+      {/*    `}>*/}
+      {/*    </ul>*/}
+      {/*  </div>*/}
+      {/*)}*/}
+
+      <MyFakePopover
+        isOpen={isOpen}
+        onClose={onClose}
+        anchorEl={anchorEl}
+      >
+        {options.map((option, index) => (
+          <OptionSelectItem key={index} onClose={onClose} {...option} />
+        ))}
+      </MyFakePopover>
     </div>
   )
 }
@@ -158,9 +191,9 @@ const OptionSelectItem = ({onClick, checked, children, onClose}: OptionSelectIte
         padding: 0 14px;
         ${theme.ggjWrapText}
         ${checked
-        ? 'background-color: ' + theme.colors.primary.main + ';'
-        : ''
-      }
+                ? 'background-color: ' + theme.colors.primary.main + ';'
+                : ''
+        }
         &:hover,
         &:focus {
           background-color: ${theme.colors.primary.main, 0.1};
